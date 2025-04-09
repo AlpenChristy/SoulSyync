@@ -16,7 +16,7 @@ import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import NotFound from "@/pages/not-found";
-
+import EventsPage from "./pages/Event";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 
@@ -37,6 +37,7 @@ function Router() {
           <Route path="/register" component={Register} />
           <Route path="/dashboard/:tab?" component={Dashboard} />
           <Route path="/profile" component={Profile} />
+          <Route path="/events" component={EventsPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
