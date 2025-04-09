@@ -7,10 +7,11 @@ import {
   BlogPost, InsertBlogPost,
   Horoscope, InsertHoroscope,
   Subscriber, InsertSubscriber,
-  Testimonial, InsertTestimonial
+  Testimonial, InsertTestimonial,
+  Event, InsertEvent
 } from '@shared/schema';
 import {
-  users, services, appointments, blogPosts, horoscopes, subscribers, testimonials
+  users, services, appointments, blogPosts, horoscopes, subscribers, testimonials, events
 } from '../shared/schema';
 import { db } from './database';
 

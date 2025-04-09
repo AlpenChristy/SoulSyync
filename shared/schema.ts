@@ -144,6 +144,37 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   serviceId: true,
 });
 
+// Events Table
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  location: text("location").notNull(),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD
+  endDate: text("end_date").notNull(),     // YYYY-MM-DD
+  startTime: text("start_time").notNull(), // HH:MM
+  endTime: text("end_time").notNull(),     // HH:MM
+  imageUrl: text("image_url"),
+  organizerId: integer("organizer_id").references(() => users.id), // Optional: Who created/hosts this
+  isPublic: boolean("is_public").default(true), // For internal/private events
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertEventSchema = createInsertSchema(events).pick({
+  title: true,
+  description: true,
+  location: true,
+  startDate: true,
+  endDate: true,
+  startTime: true,
+  endTime: true,
+  imageUrl: true,
+  organizerId: true,
+  isPublic: true,
+});
+
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -166,6 +197,10 @@ export type InsertSubscriber = z.infer<typeof insertSubscriberSchema>;
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
 
 // Common schemas for API responses
 export const apiResponseSchema = z.object({
