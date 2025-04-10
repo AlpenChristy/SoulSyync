@@ -15,6 +15,7 @@ const BlogPostContent = () => {
   const { data, isLoading, error } = useQuery<{ success: boolean; data: BlogPostType }>({
     queryKey: [`/api/blog-posts/${postId}`],
   });
+  console.log("Post data:", data);
 
   const post = data?.data;
 
@@ -85,7 +86,8 @@ const BlogPostContent = () => {
           <div className="flex items-center text-sm text-slate-500 mb-8">
             <div className="flex items-center mr-6">
               <User className="h-4 w-4 mr-2" />
-              <span>Author Name</span>
+              {/* <span>Author Name</span> */}
+              <span>{post.aaauthorName}</span>
             </div>
             <div className="flex items-center">
               <Calendar className="h-4 w-4 mr-2" />

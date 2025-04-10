@@ -43,13 +43,15 @@ const BlogCard = ({ post }: BlogCardProps) => {
               <span className="sr-only">Author</span>
               <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
                 <span className="text-xs text-primary-600 font-semibold">
-                  {post.authorId === 1 ? "SA" : getInitials("Author")}
+                  {/* {post.authorId === 1 ? "SA" : getInitials("Author")} */}
+                  {/* {post.aaauthorName} */}
                 </span>
               </div>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-slate-800">
-                {post.authorId === 1 ? "SoulSyync Admin" : "Author"}
+                {/* {post.authorId === 1 ? "SoulSyync Admin" : "Author"} */}
+                {post.aaauthorName}
               </p>
               <div className="flex space-x-1 text-sm text-slate-500">
                 <time dateTime={post.publishedAt.toString()}>{formatDate(post.publishedAt)}</time>

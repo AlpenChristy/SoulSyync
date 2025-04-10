@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { BLOG_CATEGORIES } from "@/lib/constants";
+import { useAuth } from "@/hooks/useAuth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,13 +46,25 @@ const BlogEditor = () => {
   const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Form schema extending the insert schema
-  const formSchema = insertBlogPostSchema.extend({
-    id: z.number().optional(),
-    imageUrl: z.string().nullable().optional().transform(val => val || ""),
-    featured: z.boolean().nullable().optional().transform(val => Boolean(val)),
-  });
+  // const formSchema = insertBlogPostSchema.extend({
+  //   id: z.number().optional(),
+  //   imageUrl: z.string().nullable().optional().transform(val => val || ""),
+  //   featured: z.boolean().nullable().optional().transform(val => Boolean(val)),
+  // });
+
+  const formSchema = insertBlogPostSchema
+    .omit({ authorId: true }) // remove it from form-level validation
+    .extend({
+      id: z.number().optional(),
+      imageUrl: z.string().nullable().optional().transform(val => val || ""),
+      aaauthorName: z.string().min(1, "Author name is required"),
+      featured: z.boolean().nullable().optional().transform(val => Boolean(val)),
+    });
+
+
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -78,10 +91,10 @@ const BlogEditor = () => {
   const createBlogPost = useMutation({
     mutationFn: async (formValues: FormValues) => {
       console.log("Creating blog post with values:", formValues);
-      const { user } = useAuth();
+      // const { user } = useAuth();
       const postData = {
         ...formValues,
-        authorId: user?.id
+        authorId: user?.id,
       };
       const res = await apiRequest("POST", "/api/blog-posts", postData);
       return res.json();
@@ -95,7 +108,7 @@ const BlogEditor = () => {
         });
         // Invalidate all blog-related queries to ensure UI updates
         queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
-        
+
         // Also invalidate specific queries that might be used elsewhere
         if (variables.featured) {
           queryClient.invalidateQueries({ queryKey: ["/api/blog-posts", { featured: true }] });
@@ -103,10 +116,10 @@ const BlogEditor = () => {
         if (variables.category) {
           queryClient.invalidateQueries({ queryKey: ["/api/blog-posts", { category: variables.category }] });
         }
-        
+
         form.reset();
         setIsCreating(false);
-        
+
         // Manual refetch to ensure data is up to date
         refetchBlogPosts();
       } else {
@@ -191,10 +204,23 @@ const BlogEditor = () => {
   });
 
   // Handle form submission
+  // const onSubmit = (values: FormValues) => {
+  //   if (editingPostId) {
+  //     updateBlogPost.mutate(values);
+  //   } else {
+  //     createBlogPost.mutate(values);
+  //   }
+  // };
+
+
   const onSubmit = (values: FormValues) => {
+    console.log("Form submitted with values:", values);
+
     if (editingPostId) {
+      console.log("Updating post ID:", editingPostId);
       updateBlogPost.mutate(values);
     } else {
+      console.log("Creating new blog post");
       createBlogPost.mutate(values);
     }
   };
@@ -230,14 +256,14 @@ const BlogEditor = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-heading font-semibold">Blog Management</h2>
-        <Button 
-          onClick={() => setIsCreating(!isCreating)} 
+        <Button
+          onClick={() => setIsCreating(!isCreating)}
           variant={isCreating ? "outline" : "default"}
           className="flex items-center gap-1"
         >
           {isCreating ? "Cancel" : (
             <>
-              <Plus className="h-4 w-4" /> 
+              <Plus className="h-4 w-4" />
               <span>New Post</span>
             </>
           )}
@@ -249,14 +275,16 @@ const BlogEditor = () => {
           <CardHeader>
             <CardTitle>{editingPostId ? "Edit" : "Create"} Blog Post</CardTitle>
             <CardDescription>
-              {editingPostId 
-                ? "Update the details of your existing blog post" 
+              {editingPostId
+                ? "Update the details of your existing blog post"
                 : "Create a new blog post for your audience"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                console.log("Validation errors:", errors);
+              })} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="title"
@@ -265,6 +293,20 @@ const BlogEditor = () => {
                       <FormLabel>Title</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter a compelling title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="aaauthorName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Author Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter author name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -363,8 +405,8 @@ const BlogEditor = () => {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createBlogPost.isPending || updateBlogPost.isPending}>
-                    {(createBlogPost.isPending || updateBlogPost.isPending) 
-                      ? "Saving..." 
+                    {(createBlogPost.isPending || updateBlogPost.isPending)
+                      ? "Saving..."
                       : editingPostId ? "Update Post" : "Create Post"
                     }
                   </Button>
@@ -387,8 +429,8 @@ const BlogEditor = () => {
             ) : blogPosts.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">No blog posts found</p>
-                <Button 
-                  onClick={() => setIsCreating(true)} 
+                <Button
+                  onClick={() => setIsCreating(true)}
                   className="mt-4"
                 >
                   Create Your First Post
@@ -397,8 +439,8 @@ const BlogEditor = () => {
             ) : (
               <div className="space-y-4">
                 {blogPosts.map(post => (
-                  <div 
-                    key={post.id} 
+                  <div
+                    key={post.id}
                     className="border rounded-md p-4 flex justify-between items-start"
                   >
                     <div>
@@ -418,18 +460,18 @@ const BlogEditor = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEditPost(post)}
                         className="flex items-center gap-1"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         <span>Edit</span>
                       </Button>
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
+                      <Button
+                        variant="destructive"
+                        size="sm"
                         onClick={() => handleDeletePost(post.id)}
                         className="flex items-center gap-1"
                       >

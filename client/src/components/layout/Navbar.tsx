@@ -72,8 +72,8 @@ const Navbar = () => {
                     key={link.href}
                     href={link.href}
                     className={`px-3 py-2 text-sm font-medium cursor-pointer transition-colors duration-200 ${location === link.href
-                        ? "text-brand-purple border-b-2 border-brand-purple"
-                        : "text-gray-600 hover:text-brand-purple"
+                        ? "text-purple border-b-2 border-purple"
+                        : "text-gray-600 hover:text-purple"
                       }`}
                   >
                     {link.label}
