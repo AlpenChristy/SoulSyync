@@ -17,7 +17,7 @@ const BlogCard = ({ post }: BlogCardProps) => {
         <div className="md:flex-shrink-0">
           <img 
             className="h-48 w-full object-cover md:w-48" 
-            src={post.imageUrl || "https://images.pexels.com/photos/3822355/pexels-photo-3822355.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"} 
+            src={`/api/blog-posts/${post.id}/image`}  
             alt={post.title}
           />
         </div>

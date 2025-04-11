@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, customType } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -70,6 +70,12 @@ export const insertAppointmentSchema = createInsertSchema(appointments).pick({
   notes: true,
 });
 
+const bytea = customType({
+  dataType() {
+    return "bytea";
+  },
+});
+
 // Blog Posts Table
 export const blogPosts = pgTable("blog_posts", {
   id: serial("id").primaryKey(),
@@ -78,7 +84,8 @@ export const blogPosts = pgTable("blog_posts", {
   authorId: integer("author_id").notNull(),
   aaauthorName: text("aauthor_name"),
   category: text("category").notNull(),
-  imageUrl: text("image_url"),
+  // imageUrl: text("image_url"),
+  image: bytea("image"),
   publishedAt: timestamp("published_at").defaultNow().notNull(),
   featured: boolean("featured").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -91,7 +98,8 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).pick({
   authorId: true,
   aaauthorName: true,
   category: true,
-  imageUrl: true,
+  image: true,
+  // imageUrl: true,
   featured: true,
 });
 

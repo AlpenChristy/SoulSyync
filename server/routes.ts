@@ -10,6 +10,8 @@ import bcrypt from "bcrypt";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import multer from "multer";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Session setup
@@ -422,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Blog post not found" 
         });
       }
-      
+      console.log("image type:", post.image)
       res.json({ success: true, data: post });
     } catch (error) {
       res.status(500).json({ 
@@ -432,27 +434,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/blog-posts", isAuthenticated, async (req, res) => {
+  app.get("/api/blog-posts/:id/image", async (req, res) => {
     try {
-      const validatedData = insertBlogPostSchema.parse({
-        ...req.body,
-        authorId: (req.user as any).id
-      });
-      
-      const post = await storage.createBlogPost(validatedData);
-      
-      res.status(201).json({ 
-        success: true, 
-        message: "Blog post created successfully", 
-        data: post 
-      });
+      const post = await storage.getBlogPost(parseInt(req.params.id));
+  
+      if (!post || !post.image) {
+        return res.status(404).send("Image not found");
+      }
+  
+      // Set content type correctly. You might want to store the mimetype too in DB.
+      res.set("Content-Type", "image/jpeg"); // or "image/png"
+      res.send(post.image); // assuming post.image is a Buffer
     } catch (error) {
-      res.status(400).json({ 
-        success: false, 
-        message: error instanceof Error ? error.message : "Failed to create blog post" 
-      });
+      console.error("Image fetch error:", error);
+      res.status(500).send("Failed to get image");
     }
   });
+
+const upload = multer(); // memory storage (good for processing & DB insert)
+
+app.post("/api/blog-posts", upload.single("image"), isAuthenticated, async (req, res) => {
+  try {
+    console.log("Received body:", req.body);      // 🔍 Should show the form fields
+    console.log("Received file:", req.file);      // 🔍 Should show image buffer
+
+    const validatedData = insertBlogPostSchema.parse({
+      ...req.body,
+      featured: req.body.featured === "true",
+      authorId: (req.user as any).id,
+    });
+
+    const post = await storage.createBlogPost({
+      ...validatedData,
+      image: req.file?.buffer,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Blog post created successfully",
+      data: post,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(400).json({
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to create blog post",
+    });
+  }
+});
+
 
   app.put("/api/blog-posts/:id", isAdmin, async (req, res) => {
     try {

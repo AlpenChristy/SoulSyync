@@ -59,7 +59,7 @@ const BlogEditor = () => {
     .omit({ authorId: true }) // remove it from form-level validation
     .extend({
       id: z.number().optional(),
-      imageUrl: z.string().nullable().optional().transform(val => val || ""),
+      image: z.any().optional(),
       aaauthorName: z.string().min(1, "Author name is required"),
       featured: z.boolean().nullable().optional().transform(val => Boolean(val)),
     });
@@ -75,7 +75,7 @@ const BlogEditor = () => {
       title: "",
       content: "",
       category: BLOG_CATEGORIES[0],
-      imageUrl: "",
+      image: "",
       featured: false,
     },
   });
@@ -91,14 +91,27 @@ const BlogEditor = () => {
   const createBlogPost = useMutation({
     mutationFn: async (formValues: FormValues) => {
       console.log("Creating blog post with values:", formValues);
-      // const { user } = useAuth();
-      const postData = {
-        ...formValues,
-        authorId: user?.id,
-      };
-      const res = await apiRequest("POST", "/api/blog-posts", postData);
+    
+      const formData = new FormData();
+      formData.append("title", formValues.title);
+      formData.append("content", formValues.content);
+      formData.append("category", formValues.category);
+      formData.append("aaauthorName", formValues.aaauthorName);
+      formData.append("featured", String(formValues.featured ?? false));
+      // formData.append("authorId", String(user?.id ?? ""));
+
+    
+      if (formValues.image) {
+        formData.append("image", formValues.image); // Must be a File
+      }
+      
+      const res = await fetch("/api/blog-posts", {
+        method: "POST",
+        body: formData,
+      });
+    
       return res.json();
-    },
+    },    
     onSuccess: (data, variables) => {
       console.log("Blog post creation response:", data);
       if (data.success) {
@@ -232,7 +245,7 @@ const BlogEditor = () => {
       title: post.title,
       content: post.content,
       category: post.category,
-      imageUrl: post.imageUrl || "",
+      image: post.image || "",
       featured: post.featured,
     });
     setIsCreating(true);
@@ -343,15 +356,19 @@ const BlogEditor = () => {
 
                 <FormField
                   control={form.control}
-                  name="imageUrl"
+                  name="image" // ← updated name (you can call it whatever)
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Upload Image</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter an image URL" {...field} />
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => field.onChange(e.target.files?.[0])}
+                        />
                       </FormControl>
                       <FormDescription>
-                        Provide a URL to an image that represents your post
+                        Choose an image to upload for your post
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

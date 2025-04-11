@@ -95,10 +95,10 @@ const BlogPostContent = () => {
             </div>
           </div>
           
-          {post.imageUrl && (
+          {post.image && (
             <div className="mb-8">
               <img 
-                src={post.imageUrl} 
+                src={`/api/blog-posts/${post.id}/image`}  
                 alt={post.title} 
                 className="w-full h-auto rounded-lg shadow-md"
               />
